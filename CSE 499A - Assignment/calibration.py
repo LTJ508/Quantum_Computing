@@ -215,16 +215,16 @@ def tensored_meas_cal(mit_pattern: List[List[int]] = None,
 
         # add measurements
         
-        qc_circuit.measure_all()
+        #qc_circuit.measure_all()
 
-        # end_index = nqubits
-        # for qubit_list, list_size in zip(mit_pattern, qubits_list_sizes):
+        end_index = nqubits
+        for qubit_list, list_size in zip(mit_pattern, qubits_list_sizes):
 
-        #     for qind in range(list_size):
-        #         qc_circuit.measure(qr[qubit_list[qind]],
-        #                            cr[nqubits-(end_index-qind)])
+            for qind in range(list_size):
+                qc_circuit.measure(qr[qubit_list[qind]],
+                                   cr[nqubits-(end_index-qind)])
 
-        #     end_index -= list_size
+            end_index -= list_size
 
         cal_circuits.append(qc_circuit)
 
