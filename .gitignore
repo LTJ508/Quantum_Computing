@@ -1,2 +1,5 @@
 # Virtual Environment
 .venv/
+
+# Python Cashe
+CSE 499A - Assignment/__pycache__/
