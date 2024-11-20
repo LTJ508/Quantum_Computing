@@ -12,6 +12,8 @@ import scipy.linalg as la
 from qiskit.utils import parallel_map
 import qiskit
 
+from qiskit.result.models import ExperimentResult, ExperimentResultData, QobjExperimentHeader
+
 try:
     from matplotlib import pyplot as plt
     HAS_MATPLOTLIB = True
@@ -1164,3 +1166,102 @@ class TensoredFilter():
 
 
 
+# Own defined functions for latest support
+
+def callibrationCircuitSampler(state_labels):
+    cal_circuits = []
+    qr = len(state_labels[0])
+
+    for i in range(2*qr):
+        qc_circuit = QuantumCircuit(qr)
+        for j in range(qr):
+            if state_labels[i][j] == '1':
+                qc_circuit.x(qr-j-1)
+        qc_circuit.measure_all()
+        cal_circuits.append(qc_circuit)
+    return cal_circuits
+
+
+
+
+def samplerResultListToAerResult(job, cal_result, state_labels):
+
+# Function to ensure all states are included in the counts and convert to hex
+    def ensure_all_states(counts, state_labels):
+        hex_counts = {}
+        for state in state_labels:
+            hex_state = hex(int(state, 2))
+            hex_counts[hex_state] = counts.get(state, 0)
+        return hex_counts
+
+    experiment_results = []
+    for i, state in enumerate(state_labels):
+        # Get the counts and ensure all states are included
+        counts = cal_result[i].data.meas.get_counts()
+        counts = ensure_all_states(counts, state_labels)
+        
+        experiment_result = ExperimentResult(
+            shots=1000,
+            success=True,
+            meas_level=2,
+            data=ExperimentResultData(counts=counts),
+            header=QobjExperimentHeader(
+                creg_sizes=[['meas', 2]],
+                memory_slots=2,
+                n_qubits=2,
+                name=f'mcalcal_{state}',
+                qreg_sizes=[['q', 2]]
+            ),
+            status='DONE'
+        )
+        experiment_results.append(experiment_result)
+
+    aer_result_format = Result(
+        backend_name="",
+        backend_version="",
+        qobj_id='',
+        job_id=job.job_id(),
+        success=True,
+        results=experiment_results,
+        date="",
+        status='COMPLETED',
+        header=None,
+        metadata=job.metadata,
+        time_taken=""
+    )
+
+    return aer_result_format
+
+
+def samplerResultToAerResult(job, noisy_counts):
+# Convert Sampler result to Aer result format
+    experiment_result = ExperimentResult(
+        shots=1000,
+        success=True,
+        meas_level=2,
+        data=ExperimentResultData(counts=noisy_counts),
+        header=QobjExperimentHeader(
+            creg_sizes=[['meas', 2]],
+            memory_slots=2,
+            n_qubits=2,
+            name='circuit-0',
+            qreg_sizes=[['q', 2]]
+        ),
+        status='DONE'
+    )
+
+    aer_result_noisy = Result(
+        backend_name="",
+        backend_version="",
+        qobj_id='',
+        job_id=job.job_id(),
+        success=True,
+        results=[experiment_result],
+        date="",
+        status='COMPLETED',
+        header=None,
+        metadata=job.metadata,
+        time_taken=""
+    )
+
+    return aer_result_noisy
