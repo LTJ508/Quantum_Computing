@@ -2,6 +2,6 @@ Qiskit==1.4.2
 Pylatexenc==2.10
 Qiskit-aer==0.15.1
 Qiskit-ibm-runtime==0.33.1
-Setuptools==75.4.0
+Setuptools==78.1.1
 Matplotlib==3.9.2
 Seaborn==0.13.2
